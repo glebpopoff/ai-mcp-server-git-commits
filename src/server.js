@@ -9,13 +9,13 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Get current directory
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const projectRoot = dirname(dirname(__dirname));
-
 // Initialize git with explicit path
-const git = simpleGit(projectRoot);
+const git = simpleGit('/Users/glebp/projects/ai-mcp-server-git-commit');
+
+// Log the git status on startup
+git.status()
+    .then(status => console.log('Git repository status:', status))
+    .catch(err => console.error('Git error:', err));
 
 app.use(express.json());
 
