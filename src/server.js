@@ -1,26 +1,56 @@
 import express from 'express';
 import simpleGit from 'simple-git';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
-const git = simpleGit();
+
+// Get current directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const projectRoot = dirname(dirname(__dirname));
+
+// Initialize git with explicit path
+const git = simpleGit(projectRoot);
 
 app.use(express.json());
 
 // Get commit history with team analysis
 app.get('/api/team-activity', async (req, res) => {
     try {
+        // Verify git repository
+        const isRepo = await git.checkIsRepo();
+        if (!isRepo) {
+            console.error('Not a git repository');
+            return res.status(400).json({ error: 'Not a git repository' });
+        }
+
         const days = parseInt(req.query.days) || 30;
         const since = new Date();
         since.setDate(since.getDate() - days);
+
+        console.log(`Analyzing git history from ${since.toISOString()}`);
+        console.log(`Git working directory: ${projectRoot}`);
 
         const log = await git.log({
             since: since.toISOString(),
             '--no-merges': null,
         });
+
+        if (!log || !log.all || log.all.length === 0) {
+            console.log('No commits found in the specified time range');
+            return res.json({
+                period: {
+                    start: since.toISOString(),
+                    end: new Date().toISOString()
+                },
+                teamActivity: []
+            });
+        }
 
         // Analyze commits by author
         const teamActivity = {};
