@@ -1,0 +1,11 @@
+{
+    "servers": [
+        {
+            "name": "git-team-analysis",
+            "url": "http://localhost:3001",
+            "endpoints": {
+                "team-activity": "/api/team-activity"
+            }
+        }
+    ]
+}
